@@ -13,6 +13,10 @@ from mailing.models import Recipient, Message, Mailing, AttemptSending
 from users.models import User
 
 
+class HomeView(TemplateView):
+    template_name = "mailing/home.html"
+
+
 class MainPageView(TemplateView):
     template_name = "mailing/main_page.html"
 
