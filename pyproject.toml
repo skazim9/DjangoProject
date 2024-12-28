@@ -10,6 +10,9 @@ python = "^3.12"
 psycopg2-binary = "^2.9.10"
 python-dotenv = "^1.0.1"
 django = "4.2.2"
+pillow = "^11.0.0"
+django-phonenumber-field = "^8.0.0"
+django-phonenumbers = "^1.0.1"
 
 
 [tool.poetry.group.lint.dependencies]

@@ -5,10 +5,10 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 
 from config.settings import EMAIL_HOST_USER
-from users.forms import UserRegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm
+from users.forms import UserRegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm, UserForm
 from users.models import User
 
 class UserCreateView(CreateView):
@@ -41,12 +41,9 @@ def email_verification(request, token):
 
 class UserUpdateView(UpdateView):
     model = User
-    form_class = UserRegisterForm
-
-
-class UserDeleteView(DeleteView):
-    model = User
-    success_url = reverse_lazy("mailing:recipient_list")
+    form_class = UserForm
+    template_name = "users/user_update.html"
+    success_url = reverse_lazy("users:user_list")
 
 
 def password_reset_request(request):
@@ -107,3 +104,11 @@ def password_reset_invalid(request):
 
 def password_reset_done(request):
     return render(request, "users/password_reset_done.html")
+
+
+class UserDetailsView(DetailView):
+    model = User
+
+
+class UserListView(ListView):
+    model = User
