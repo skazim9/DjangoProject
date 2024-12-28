@@ -1,11 +1,14 @@
 import secrets
 
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
+from django.views import View
+from django.views.generic import CreateView, UpdateView, DetailView, ListView
 
 from config.settings import EMAIL_HOST_USER
 from users.forms import UserRegisterForm, PasswordResetRequestForm, PasswordResetConfirmForm, UserForm
@@ -39,7 +42,7 @@ def email_verification(request, token):
     return redirect(reverse("users:login"))
 
 
-class UserUpdateView(UpdateView):
+class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = UserForm
     template_name = "users/user_update.html"
@@ -106,9 +109,25 @@ def password_reset_done(request):
     return render(request, "users/password_reset_done.html")
 
 
-class UserDetailsView(DetailView):
+class UserDetailsView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = User
+    permission_required = "user.can_block_users"
 
 
-class UserListView(ListView):
+class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = User
+    permission_required = "user.can_block_users"
+
+
+class BlockUserView(LoginRequiredMixin, View):
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, id=pk)
+
+        if not request.user.has_perm('user.can_block_users'):
+            return HttpResponseForbidden("У вас недостаточно прав для блокировки пользователя")
+
+        user.is_active = False
+        user.save()
+
+        return redirect('users:user', pk=user.id)

@@ -1,6 +1,7 @@
 import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.views import View
@@ -17,7 +18,7 @@ class HomeView(TemplateView):
     template_name = "mailing/home.html"
 
 
-class MainPageView(TemplateView):
+class MainPageView(LoginRequiredMixin, TemplateView):
     template_name = "mailing/main_page.html"
 
     def get_context_data(self, **kwargs):
@@ -31,11 +32,11 @@ class MainPageView(TemplateView):
         return context
 
 
-class RecipientListView(ListView):
+class RecipientListView(LoginRequiredMixin, ListView):
     model = Recipient
 
 
-class RecipientDetailsView(DetailView):
+class RecipientDetailsView(LoginRequiredMixin, DetailView):
     model = Recipient
 
 
@@ -52,22 +53,22 @@ class RecipientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class RecipientUpdateView(UpdateView):
+class RecipientUpdateView(LoginRequiredMixin, UpdateView):
     model = Recipient
     form_class = RecipientForm
     success_url = reverse_lazy("mailing:recipient_list")
 
 
-class RecipientDeleteView(DeleteView):
+class RecipientDeleteView(LoginRequiredMixin, DeleteView):
     model = Recipient
     success_url = reverse_lazy("mailing:recipient_list")
 
 
-class MessageListView(ListView):
+class MessageListView(LoginRequiredMixin, ListView):
     model = Message
 
 
-class MessageDetailsView(DetailView):
+class MessageDetailsView(LoginRequiredMixin, DetailView):
     model = Message
 
 
@@ -77,22 +78,22 @@ class MessageCreateView(CreateView):
     success_url = reverse_lazy("mailing:message_list")
 
 
-class MessageUpdateView(UpdateView):
+class MessageUpdateView(LoginRequiredMixin, UpdateView):
     model = Message
     form_class = MessageForm
     success_url = reverse_lazy("mailing:message_list")
 
 
-class MessageDeleteView(DeleteView):
+class MessageDeleteView(LoginRequiredMixin, DeleteView):
     model = Message
     success_url = reverse_lazy("mailing:message_list")
 
 
-class MailingListView(ListView):
+class MailingListView(LoginRequiredMixin, ListView):
     model = Mailing
 
 
-class MailingDetailsView(DetailView):
+class MailingDetailsView(LoginRequiredMixin, DetailView):
     model = Mailing
 
 
@@ -109,18 +110,18 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MailingUpdateView(UpdateView):
+class MailingUpdateView(LoginRequiredMixin, UpdateView):
     model = Mailing
     form_class = MailingForm
     success_url = reverse_lazy("mailing:mailing_list")
 
 
-class MailingDeleteView(DeleteView):
+class MailingDeleteView(LoginRequiredMixin, DeleteView):
     model = Mailing
     success_url = reverse_lazy("mailing:mailing_list")
 
 
-class MailingSendView(View):
+class MailingSendView(LoginRequiredMixin, View):
     def get(self, request, pk):
         mailing = get_object_or_404(Mailing, pk=pk)
 
@@ -148,7 +149,7 @@ class MailingSendView(View):
         return redirect("mailing:mailing_list")
 
 
-class MailingReportView(DetailView):
+class MailingReportView(LoginRequiredMixin, DetailView):
     model = Mailing
     template_name = "mailing/mailing_report.html"
 
@@ -164,3 +165,17 @@ class MailingReportView(DetailView):
         self.object = self.get_object()
 
         return super().get(request, *args, **kwargs)
+
+
+class DisabledMailingView(LoginRequiredMixin, View):
+
+    def post(self, request, pk):
+        mailing = get_object_or_404(Mailing, id=pk)
+
+        if not request.user.has_perm('mailing.can_disabling_mailing'):
+            return HttpResponseForbidden("У вас недостаточно прав для отключения рассылки")
+
+        mailing.status = "completed"
+        mailing.save()
+
+        return redirect('mailing:mailing', pk=mailing.id)
