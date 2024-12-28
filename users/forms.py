@@ -1,5 +1,5 @@
-from django.contrib.auth.forms import UserCreationForm
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 
 from .models import User
 
@@ -32,10 +32,10 @@ class PasswordResetConfirmForm(forms.Form):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('avatar', 'phone_number', 'country')
+        fields = ("avatar", "phone_number", "country")
 
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
-        self.fields['avatar'].widget.attrs.update({'class': 'form-control'})
-        self.fields['phone_number'].widget.attrs.update({'class': 'form-control'})
-        self.fields['country'].widget.attrs.update({'class': 'form-control'})
+        self.fields["avatar"].widget.attrs.update({"class": "form-control"})
+        self.fields["phone_number"].widget.attrs.update({"class": "form-control"})
+        self.fields["country"].widget.attrs.update({"class": "form-control"})
